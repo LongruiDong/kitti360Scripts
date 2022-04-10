@@ -86,25 +86,46 @@ if __name__=='__main__':
     if 'KITTI360_DATASET' in os.environ:
         kitti360Path = os.environ['KITTI360_DATASET']
     else:
-        kitti360Path = os.path.join(os.path.dirname(
-                            os.path.realpath(__file__)), '..', '..')
+        kitti360Path = os.path.join('/media/KITTI-360/dataset')
 
-    fileCameraToPose = os.path.join(kitti360Path, 'calibration', 'calib_cam_to_pose.txt')
+    fileCameraToPose = os.path.join(kitti360Path, 'calib', 'calib_cam_to_pose.txt')
     Tr = loadCalibrationCameraToPose(fileCameraToPose)
+    T_BC = Tr['image_00']
+    T_CB = np.linalg.inv(T_BC)
     print('Loaded %s' % fileCameraToPose)
-    print(Tr)
+    print('T_CB: \n',T_CB)
+    print('T_BC*T_CB: \n',np.matmul(T_BC,T_CB))
 
-    fileCameraToVelo = os.path.join(kitti360Path, 'calibration', 'calib_cam_to_velo.txt')
-    Tr = loadCalibrationRigid(fileCameraToVelo)
+    fileCameraToVelo = os.path.join(kitti360Path, 'calib', 'calib_cam_to_velo.txt')#TLC
+    T_LC = loadCalibrationRigid(fileCameraToVelo)
     print('Loaded %s' % fileCameraToVelo)
-    print(Tr)
+    print('T_LC: \n',T_LC)
+    T_CL = np.linalg.inv(T_LC)
+    print('T_CL: \n',T_CL)
+    np.savetxt(os.path.join(kitti360Path, 'calib', 'calib_velo_to_cam.txt'),T_CL,fmt='%.9f')
+    # vl = np.array([0,0,0,1]) #1,2,1,1
+    # print(vl)
+    # vc = np.matmul(T_CL,vl)
+    # print(vc)
 
-    fileSickToVelo = os.path.join(kitti360Path, 'calibration', 'calib_sick_to_velo.txt')
-    Tr = loadCalibrationRigid(fileSickToVelo)
-    print('Loaded %s' % fileSickToVelo)
-    print(Tr)
 
-    filePersIntrinsic = os.path.join(kitti360Path, 'calibration', 'perspective.txt')
+    # fileSickToVelo = os.path.join(kitti360Path, 'calib', 'calib_sick_to_velo.txt')
+    # Tr = loadCalibrationRigid(fileSickToVelo)
+    # print('Loaded %s' % fileSickToVelo)
+    # print(Tr)
+
+    filePersIntrinsic = os.path.join(kitti360Path, 'calib', 'perspective.txt')
     Tr = loadPerspectiveIntrinsic(filePersIntrinsic)
     print('Loaded %s' % filePersIntrinsic)
     print(Tr)
+    Rrect_0 = Tr['R_rect_00']
+    lastcol = np.array([0,0,0]).reshape(3,1)
+    Rrect_0 = np.concatenate((Rrect_0, lastcol),axis=1)
+    print('Rrect_0: \n',Rrect_0)
+    lastrow = np.array([0,0,0,1]).reshape(1,4)
+    Rrect_0 = np.concatenate((Rrect_0, lastrow))
+    print('Rrect_0: \n',Rrect_0)
+
+    T_rCL = np.matmul(Rrect_0,T_CL)
+    print('T_rCL: \n',T_rCL)
+    np.savetxt(os.path.join(kitti360Path, 'calib', 'calib_velo_to_rectcam.txt'),T_rCL,fmt='%.9f')

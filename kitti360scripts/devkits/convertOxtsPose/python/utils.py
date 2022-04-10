@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 er = 6378137. # average earth radius at the equator
 
@@ -30,10 +31,27 @@ def postprocessPoses (poses_in):
   for i in range(len(poses_in)):
     # if there is no data => no pose
     if not len(poses_in[i]):
-      pose.append([])
+      poses.append([])
       continue
   
     P = poses_in[i]
     poses.append( np.matmul(R, P.T).T )
   
   return poses
+
+def firstIPoses (poses_in):
+  # numf = len(poses_in)
+  poses  = []
+  Tw0 = copy.deepcopy(poses_in[0])
+  T0w = np.linalg.inv(Tw0)
+  for i in range(len(poses_in)):
+    # if there is no data => no pose
+    if not len(poses_in[i]):
+      poses.append([])
+      continue
+  
+    Twi = poses_in[i]
+    poses.append( np.matmul(T0w, Twi) )
+
+  return poses
+

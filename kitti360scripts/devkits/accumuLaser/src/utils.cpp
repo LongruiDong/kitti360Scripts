@@ -221,7 +221,7 @@ void CropVelodyneData (Eigen::MatrixXd &matIn, vector<int> &idxOut, float minDis
  *@brief CurlVelodyneData Transform velodyne data given curl parameters
  *@param velo_in Input velodyne data
  *@param velo_out Output velodyne data
- *@param r Rotation matrix for curl
+ *@param r Rotation matrix for curl Tvv-1
  *@param t Translation vector for curl
  */
 void CurlVelodyneData (Eigen::MatrixXd &velo_in, Eigen::MatrixXd &velo_out, Eigen::Vector3d r, Eigen::Vector3d t){
@@ -264,7 +264,7 @@ void CurlVelodyneData (Eigen::MatrixXd &velo_in, Eigen::MatrixXd &velo_out, Eige
       velo_out(i, 2) = vz*ct + (kx*vy-ky*vx)*st + kz*kv*(1-ct) + tz;
       
       
-    } else {
+    } else {//没有旋转 可以看出 kt360时间戳是一次扫描的末尾
       
       velo_out(i, 0) = vx + tx;
       velo_out(i, 1) = vy + ty;

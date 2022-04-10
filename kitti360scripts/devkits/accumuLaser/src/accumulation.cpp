@@ -32,13 +32,13 @@ bool PointAccumulation::LoadTransformations(){
         return false;
     }
 
-    // load poses
+    // load poses Twb
     string poseName = poseDir + "/poses.txt";
     if (!LoadPoses(poseName.c_str(), Tr_pose_world, Tr_pose_index)) {
         return false;
     }
 
-    // calculate velo -> pose
+    // calculate velo -> pose Tbc*Tvc^-1=Tbc*Tcv=Tbv
     Tr_velo_pose = Tr_cam_pose[0] * Tr_cam_velo.inverse();
     
     return true;
@@ -204,18 +204,18 @@ void PointAccumulation::CurlParametersFromPoses(int frame, Eigen::Matrix4d Tr_po
 
     if (frame==0){
         int indexNext = GetFrameIndex(frame+1);
-        if (indexNext>=0){
+        if (indexNext>=0){ //T1w*Tw0= Tb+1 b
             Tr_pose_pose = Tr_pose_world[indexNext].inverse() * Tr_pose_curr;
         }
     }
     else{
         int indexPrev = GetFrameIndex(frame-1);
-        if (indexPrev>=0){
+        if (indexPrev>=0){ //Tbw*Twb-1 Tbb-1
             Tr_pose_pose = Tr_pose_curr.inverse() * Tr_pose_world[indexPrev];
         }
     }
 
-    
+    //Tvb * * Tbv = Tvv-1
     Eigen::Matrix4d Tr_delta = Tr_velo_pose.inverse() * Tr_pose_pose * Tr_velo_pose;
     Eigen::Matrix3d Tr_delta_r = Tr_delta.block(0,0,3,3);
 
@@ -447,7 +447,7 @@ void PointAccumulation::AddVelodynePoints(){
         Eigen::MatrixXd veloData;
         LoadVelodyneData(frame, M_PI/8, veloData);
 
-        // get crop index, curl point clouds, remove intensities
+        // get crop index, curl point clouds, remove intensities Tvv-1 轴角 平移
         Eigen::Vector3d currR, currT;
         CurlParametersFromPoses(frame, Tr_pose_world[frameIndex], currR, currT);
 

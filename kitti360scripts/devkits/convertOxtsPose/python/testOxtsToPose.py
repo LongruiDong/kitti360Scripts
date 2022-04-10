@@ -1,12 +1,12 @@
 # Test script for loading Oxts data and convert to Mercator coordinate
 import os
 from data import loadOxtsData
-from utils import postprocessPoses
+from utils import firstIPoses, postprocessPoses
 from convertOxtsToPose import convertOxtsToPose
 
 if __name__=="__main__":
 
-  # root dir of KITTI-360
+  # root dir of KITTI-360  /media/KITTI-360/dataset
   if 'KITTI360_DATASET' in os.environ:
       kitti360_dir = os.environ['KITTI360_DATASET']
   else:
@@ -15,7 +15,7 @@ if __name__=="__main__":
 
   # load Oxts data
   seq_id = 0
-  oxts_dir = os.path.join(kitti360_dir, 'data_poses', '2013_05_28_drive_%04d_sync'%seq_id, 'oxts')
+  oxts_dir = os.path.join(kitti360_dir, 'data_oxts', '2013_05_28_drive_%04d_sync'%seq_id, 'oxts')
   if not os.path.isdir(oxts_dir):
     raise ValueError('%s does not exist! \nPlease specify KITTI360_DATASET in your system path.\nPlease check if you have downloaded OXTS poses (data_poses_oxts.zip) and unzipped them under KITTI360_DATASET' % oxts_dir)
   oxts,ts = loadOxtsData(oxts_dir)
@@ -30,14 +30,17 @@ if __name__=="__main__":
   #   x=forward, y=left, z=up
   poses = postprocessPoses(poses)
 
+  # 对齐首帧
+  # poses = firstIPoses(poses)
+
   # write to file
-  output_dir = 'output'
+  output_dir = os.path.join(kitti360_dir, 'data_oxts')
   if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
-  output_file = '%s/2013_05_28_drive_%04d_sync_oxts2pose.txt'% (output_dir, seq_id)
+  output_file = '%s/%02d_sync_oxts2pose.txt'% (output_dir, seq_id)
   
   with open(output_file, 'w') as f:
       for pose_ in poses:
-          pose_ = ' '.join(['%.6f'%x for x in pose_.flatten()])
+          pose_ = ' '.join(['%.6f'%x for x in pose_[0:3,:].flatten()])
           f.write('%s\n'%pose_)
   print('Output written to %s' % output_file)

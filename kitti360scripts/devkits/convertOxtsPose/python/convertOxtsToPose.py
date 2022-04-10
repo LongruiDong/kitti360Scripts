@@ -22,7 +22,7 @@ def convertOxtsToPose(oxts):
   # origin in Mercator coordinate
   ox,oy = latlonToMercator(origin_oxts[0],origin_oxts[1],scale)
   origin = np.array([ox, oy, 0])
-  
+  print('origin: ',origin)
   pose     = []
   
   # for all oxts packets do
